@@ -21,20 +21,36 @@ def expand_appear(filepath, outfile):
     with open(filepath,"r") as file:
         tree = etree.fromstring(file.read())
 
-    # find all nodes with "appear" in attrib, but iterate over the ancestors of tag "diagram"
+    added_pages = 0
+
+    # find all nodes with "appear" in attrib, but iterate over their ancestors of tag "diagram"
     for x in tree.xpath(".//*[@appear]/ancestor::diagram"):
-        # duplicate the full diagram
-        parent = x.getparent()
-        y = deepcopy(x)
-        # change diagram id
-        y.attrib["id"] = y.attrib["id"] + "xxx"
-        # remove appear elements in the original diagram
+        # find maximum appear value:
+        max_appear = 0
         for z in x.xpath(".//*[@appear]"):
-            z.getparent().remove(z)
-        parent.insert(parent.index(x)+1, y)
+            max_appear = max(max_appear, int(z.attrib["appear"]))
+
+        added_pages += max_appear
+
+        # add a duplicate of the full diagram max_appear times
+        # the first one added will be the last one in the final file
+        parent = x.getparent()
+        for i in range(max_appear,0,-1):
+            y = deepcopy(x)
+            # change diagram id
+            y.attrib["id"] = y.attrib["id"] + "X"*i
+            # remove appear elements
+            for z in y.xpath(".//*[@appear]"):
+                if int(z.attrib["appear"]) > i:
+                    z.getparent().remove(z)
+            parent.insert(parent.index(x)+1, y)
+        # remove from original page
+        for z in x.xpath(".//*[@appear]"):
+            if int(z.attrib["appear"]) > 0:
+                z.getparent().remove(z)
 
     # update number of pages
-    tree.attrib["pages"] = str(int(tree.attrib["pages"])+1)
+    tree.attrib["pages"] = str(int(tree.attrib["pages"]) + added_pages)
 
     with open(outfile,"w") as file:
         xmlstring = etree.tostring(tree, encoding="unicode", pretty_print=True)
