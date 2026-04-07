@@ -9,6 +9,7 @@ The following feature are supported and can be enabled by adding the respective 
 - `appear`: Add this property and set the value on which frame the object should appear ("1" means it appears one "click" after the initial slide).
 - `hide`: Add this property and set the value on which frame it should be removed ("1" means it is removed one "click" after the initial slide).
 - `slide_number`: Add this property (value does not matter) to a text label, to automatically replace the text with the slide number.
+- `skip_page`: Add this property (value does not matter) to at least one object to remove the containing page completely (useful for template pages).
 
 ## Example:
 - Create a drawio file with one page per slide
@@ -18,3 +19,4 @@ The following feature are supported and can be enabled by adding the respective 
 python slideio.py slides.drawio tmp.drawio
 drawio --export -a tmp.drawio
 ```
+- An example drawio file and build script can be found in the `example` folder

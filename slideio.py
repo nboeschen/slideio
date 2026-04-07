@@ -32,9 +32,17 @@ def expand(tree):
     Handle "appear" and "hide" attributes
     """
     added_pages = 0
+    skipped_pages = 0
 
     # Iterate all "diagram" types in xml tree. These are all pages in drawio, and will be the slides of the pdf.
     for page_index, x in enumerate(tree.xpath(".//diagram")):
+
+        # skip pages containing any object with the "skip_page" property
+        if len(x.xpath(".//*[@skip_page]")) != 0:
+            skipped_pages += 1
+            x.getparent().remove(x)
+            continue
+
         # find maximum "appear"/"hide" value:
         max_expand = 0
         for z in x.xpath(".//*[@appear|@hide]"):
@@ -45,7 +53,7 @@ def expand(tree):
 
         # add page number to "page_number" elements
         for z in x.xpath(".//*[@slide_number]"):
-            z.attrib["label"] = f"{page_index+1}"
+            z.attrib["label"] = f"{page_index-skipped_pages+1}"
 
         # add a duplicate of the full diagram max_expand times
         # the first one added will be the last one in the final file
@@ -71,7 +79,7 @@ def expand(tree):
                 z.getparent().remove(z)
 
     # update number of pages
-    tree.attrib["pages"] = str(int(tree.attrib["pages"]) + added_pages)
+    tree.attrib["pages"] = str(int(tree.attrib["pages"]) + added_pages - skipped_pages)
 
 
 if __name__ == '__main__':
