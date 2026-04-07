@@ -33,8 +33,8 @@ def expand(tree):
     """
     added_pages = 0
 
-    # find all nodes with "appear" or "hide" in attrib, but iterate over their ancestors of tag "diagram"
-    for x in tree.xpath(".//*[@appear|@hide]/ancestor::diagram"):
+    # Iterate all "diagram" types in xml tree. These are all pages in drawio, and will be the slides of the pdf.
+    for page_index, x in enumerate(tree.xpath(".//diagram")):
         # find maximum "appear"/"hide" value:
         max_expand = 0
         for z in x.xpath(".//*[@appear|@hide]"):
@@ -42,6 +42,10 @@ def expand(tree):
             max_expand = max(max_expand, int(z.get("hide",0)))
 
         added_pages += max_expand
+
+        # add page number to "page_number" elements
+        for z in x.xpath(".//*[@slide_number]"):
+            z.attrib["label"] = f"{page_index+1}"
 
         # add a duplicate of the full diagram max_expand times
         # the first one added will be the last one in the final file
