@@ -28,17 +28,19 @@ def save_diagram(tree, outfile):
         file.write(xmlstring)
 
 def safe_remove(page, element):
+    if element.getparent() == None:
+        # the element was already remove, thats fine
+        return
     # first remove all elements that are children of the element in the current page
     for w in page.xpath(f".//*[@parent='{element.attrib['id']}']"):
         if w.getparent().tag == "object":
-            # special case: some images use an extra layer of tag "object" ...
-            tmp = w.getparent().getparent()
-            tmp.remove(w.getparent())
+            # special case: some images and tables use an extra layer of tag "object" ...
+            safe_remove(page, w.getparent())
         else:
-            w.getparent().remove(w)
+            safe_remove(page, w)
+
     # remove the element
     element.getparent().remove(element)
-
 
 def expand(tree):
     """
@@ -91,7 +93,9 @@ def expand(tree):
 
 
     # update number of pages
-    tree.attrib["pages"] = str(int(tree.attrib["pages"]) + added_pages - skipped_pages)
+    new_pages = int(tree.attrib["pages"]) + added_pages - skipped_pages
+    print(f"slideio: {int(tree.attrib["pages"])} -> {new_pages} pages")
+    tree.attrib["pages"] = str(new_pages)
 
 
 if __name__ == '__main__':
